@@ -1,120 +1,446 @@
 #2401CS83   Krishkumar
-import sys
+
+import random
+import time
+from collections import Counter
+
+try:
+    from colorama import Fore, Style, init
+    init(autoreset=True)
+    COLOR = True
+except:
+    COLOR = False
+
+
+def green(text):
+    return f"{Fore.GREEN}{text}{Style.RESET_ALL}" if COLOR else text
+
+def red(text):
+    return f"{Fore.RED}{text}{Style.RESET_ALL}" if COLOR else text
+
+def cyan(text):
+    return f"{Fore.CYAN}{text}{Style.RESET_ALL}" if COLOR else text
+
+def yellow(text):
+    return f"{Fore.YELLOW}{text}{Style.RESET_ALL}" if COLOR else text
 
 
 def encrypt(message, shift):
     result = ""
+
     for char in message:
         if char.isalpha():
             base = ord('A') if char.isupper() else ord('a')
             result += chr((ord(char) - base + shift) % 26 + base)
         else:
             result += char
+
     return result
+
 
 def decrypt(message, shift):
     return encrypt(message, -shift)
 
+
+
+def vigenere_encrypt(text, key):
+    result = ""
+    key = key.lower()
+    key_index = 0
+
+    for char in text:
+        if char.isalpha():
+            shift = ord(key[key_index % len(key)]) - ord('a')
+            base = ord('A') if char.isupper() else ord('a')
+
+            result += chr((ord(char) - base + shift) % 26 + base)
+
+            key_index += 1
+        else:
+            result += char
+
+    return result
+
+
+def vigenere_decrypt(text, key):
+    result = ""
+    key = key.lower()
+    key_index = 0
+
+    for char in text:
+        if char.isalpha():
+            shift = ord(key[key_index % len(key)]) - ord('a')
+            base = ord('A') if char.isupper() else ord('a')
+
+            result += chr((ord(char) - base - shift) % 26 + base)
+
+            key_index += 1
+        else:
+            result += char
+
+    return result
+
+
+
 def crack(ciphertext):
-    print("\n  Trying all 25 shifts...\n")
-    common = {"the","and","is","to","a","hello","hi","you","at","we","he","she","it","of"}
+
+    print(cyan("\n Trying all 25 shifts...\n"))
+
+    common = {
+        "the", "and", "is", "to", "a",
+        "hello", "hi", "you", "at",
+        "we", "he", "she", "it", "of"
+    }
+
+    best_score = 0
+    best_guess = ""
+
     for shift in range(1, 26):
+
         guess = decrypt(ciphertext, shift)
-        readable = any(w in guess.lower().split() for w in common)
-        tag = "  ← readable?" if readable else ""
-        print(f"  [{shift:>2}]  {guess}{tag}")
+
+        score = sum(word in guess.lower().split() for word in common)
+
+        if score > best_score:
+            best_score = score
+            best_guess = guess
+
+        readable = " ← readable?" if score > 0 else ""
+
+        print(f"[{shift:>2}] {guess}{readable}")
+
+        time.sleep(0.05)
+
+    print(green("\n Best Guess:"))
+    print(best_guess)
+
+
+
+def frequency_analysis(text):
+
+    letters = [c.lower() for c in text if c.isalpha()]
+
+    if not letters:
+        print(red("No letters found."))
+        return
+
+    counts = Counter(letters)
+
+    total = sum(counts.values())
+
+    print(cyan("\n Letter Frequency:\n"))
+
+    for char, count in sorted(counts.items()):
+
+        percent = (count / total) * 100
+
+        bar = "█" * int(percent)
+
+        print(f"{char}: {count:>3} ({percent:5.1f}%) {bar}")
+
+
 
 def strength_report(message, shift):
+
     letters = sum(1 for c in message if c.isalpha())
+
     score = 0
+
     tips = []
 
-    if len(message) >= 15: score += 1
-    else: tips.append("Longer messages are harder to frequency-analyse.")
+    if len(message) >= 15:
+        score += 1
+    else:
+        tips.append("Longer messages are harder to analyse.")
 
-    if shift not in [1, 3, 13]: score += 1
-    else: tips.append(f"Shift {shift} is very common — attackers try it first.")
+    if shift not in [1, 3, 13]:
+        score += 1
+    else:
+        tips.append("Common shifts are easy to guess.")
 
-    if any(c in message for c in "!@#$%^&*"): score += 1
-    else: tips.append("Symbols stay unencrypted and reveal message structure.")
+    if any(c in message for c in "!@#$%^&*"):
+        score += 1
+    else:
+        tips.append("Symbols reveal message structure.")
 
-    labels = {0: "☠️  Terrible", 1: "🟠 Weak", 2: "🟡 Fair", 3: "🟢 Okay"}
-    print(f"\n  ┌─ Strength Report ───────────────────────┐")
-    print(f"  │  Rating   : {labels[score]:<30}│")
-    print(f"  │  Letters  : {letters:<30}│")
-    print(f"  │  Shift    : {shift:<30}│")
-    print(f"  │  Key space: 25 possible shifts           │")
-    print(f"  │  Crack time (computer): < 0.001 seconds  │")
-    print(f"  ├─ Tips ──────────────────────────────────┤")
+    labels = {
+        0: "Terrible",
+        1: "Weak",
+        2: "Fair",
+        3: "Okay"
+    }
+
+    print(cyan("\n ===== Strength Report ====="))
+
+    print(f"Rating      : {labels[score]}")
+    print(f"Letters     : {letters}")
+    print(f"Shift       : {shift}")
+    print(f"Key Space   : 25")
+    print(f"Crack Time  : < 0.001 sec")
+
+    print("\nTips:")
+
     if tips:
         for tip in tips:
-            # wrap tip to fit box width of 42 chars
-            print(f"  │  • {tip[:40]:<40}│")
-            if len(tip) > 40:
-                print(f"  │    {tip[40:80]:<40}│")
+            print(f" - {tip}")
     else:
-        print(f"  │  ✓ As good as Caesar cipher gets!       │")
-    print(f"  ├─ Reality check ─────────────────────────┤")
-    print(f"  │  Caesar is a TOY cipher. For real use:   │")
-    print(f"  │  → Passwords : use bcrypt / Argon2       │")
-    print(f"  │  → Data      : use AES-256               │")
-    print(f"  └─────────────────────────────────────────┘")
+        print(" - Best possible Caesar usage.")
+
+    print(green("\n Caesar Cipher is NOT secure for real-world encryption."))
+
+
+
+def save_to_file(text):
+
+    filename = input("Filename to save: ")
+
+    try:
+        with open(filename, "w") as f:
+            f.write(text)
+
+        print(green("Saved successfully."))
+
+    except:
+        print(red("Could not save file."))
+
+
+def read_from_file():
+
+    filename = input("Filename to read: ")
+
+    try:
+        with open(filename, "r") as f:
+            data = f.read()
+
+        print(green("File loaded."))
+
+        return data
+
+    except:
+        print(red("Could not read file."))
+
+        return ""
+
+
+
+def random_shift():
+    return random.randint(1, 25)
+
+
+
+def rot13(text):
+    return encrypt(text, 13)
+
+
+
+def compare_shifts(message):
+
+    print(cyan("\n Caesar Cipher Comparison:\n"))
+
+    for i in range(1, 26):
+        print(f"{i:>2}: {encrypt(message, i)}")
+
+
+
+def about():
+
+    print(cyan("""
+==============================
+        ABOUT CIPHER
+==============================
+
+Caesar Cipher:
+- Monoalphabetic substitution cipher
+- Invented by Julius Caesar
+- Uses alphabet shifting
+- Key space = 25
+- Vulnerable to brute force
+- Broken using frequency analysis
+
+Real-world encryption:
+- AES-256 for data encryption
+- bcrypt / Argon2 for passwords
+
+==============================
+"""))
 
 
 
 def show_menu():
-    print("""
-  ╔════════════════════════════╗
-  ║    CAESAR CIPHER TOOL      ║
-  ╠════════════════════════════╣
-  ║  1 · 🔒 Encrypt            ║
-  ║  2 · 🔓 Decrypt            ║
-  ║  3 · 🔨 Brute Force        ║
-  ║  4 · 🛡️  Strength Report   ║
-  ║  q · Quit                  ║
-  ╚════════════════════════════╝""")
+
+    print(yellow("""
+╔══════════════════════════════════╗
+║        CIPHER TOOLKIT           ║
+╠══════════════════════════════════╣
+║ 1  · Encrypt Caesar             ║
+║ 2  · Decrypt Caesar             ║
+║ 3  · Brute Force Attack         ║
+║ 4  · Strength Report            ║
+║ 5  · Frequency Analysis         ║
+║ 6  · Random Key Encrypt         ║
+║ 7  · ROT13                      ║
+║ 8  · Compare All Shifts         ║
+║ 9  · Vigenere Encrypt           ║
+║ 10 · Vigenere Decrypt           ║
+║ 11 · Encrypt File               ║
+║ 12 · About Cipher               ║
+║ q  · Quit                       ║
+╚══════════════════════════════════╝
+"""))
+
+
 
 def get_shift():
+
     try:
-        s = int(input("  Shift (1–25): ").strip())
+        s = int(input("Shift (1-25): ").strip())
+
         return s % 26 or 3
+
     except ValueError:
-        print("  (Using default shift: 3)")
+
+        print(red("Using default shift: 3"))
+
         return 3
 
 
-
 def main():
-    print(__doc__)
+
     while True:
+
         show_menu()
-        choice = input("\n  → ").strip().lower()
+
+        choice = input("→ ").strip().lower()
+
 
         if choice == "1":
-            msg = input("\n  Message : ")
+
+            msg = input("Message: ")
+
             shift = get_shift()
-            print(f"\n  🔒  {encrypt(msg, shift)}\n")
+
+            result = encrypt(msg, shift)
+
+            print(green(f"\nEncrypted:\n{result}\n"))
+
+            save = input("Save to file? (y/n): ").lower()
+
+            if save == "y":
+                save_to_file(result)
+
 
         elif choice == "2":
-            msg = input("\n  Ciphertext : ")
+
+            msg = input("Ciphertext: ")
+
             shift = get_shift()
-            print(f"\n  🔓  {decrypt(msg, shift)}\n")
+
+            print(green(f"\nDecrypted:\n{decrypt(msg, shift)}\n"))
+
 
         elif choice == "3":
-            msg = input("\n  Ciphertext to crack : ")
+
+            msg = input("Ciphertext to crack: ")
+
             crack(msg)
 
+
         elif choice == "4":
-            msg = input("\n  Message : ")
+
+            msg = input("Message: ")
+
             shift = get_shift()
+
             strength_report(msg, shift)
 
+
+        elif choice == "5":
+
+            msg = input("Text: ")
+
+            frequency_analysis(msg)
+
+
+        elif choice == "6":
+
+            msg = input("Message: ")
+
+            shift = random_shift()
+
+            result = encrypt(msg, shift)
+
+            print(green(f"\nRandom Shift Used: {shift}"))
+
+            print(result)
+
+
+        elif choice == "7":
+
+            msg = input("Message: ")
+
+            print(green(f"\nROT13:\n{rot13(msg)}\n"))
+
+
+        elif choice == "8":
+
+            msg = input("Message: ")
+
+            compare_shifts(msg)
+
+
+        elif choice == "9":
+
+            msg = input("Message: ")
+
+            key = input("Key: ")
+
+            print(green(f"\nEncrypted:\n{vigenere_encrypt(msg, key)}\n"))
+
+
+        elif choice == "10":
+
+            msg = input("Ciphertext: ")
+
+            key = input("Key: ")
+
+            print(green(f"\nDecrypted:\n{vigenere_decrypt(msg, key)}\n"))
+
+
+        elif choice == "11":
+
+            data = read_from_file()
+
+            if data:
+
+                shift = get_shift()
+
+                encrypted = encrypt(data, shift)
+
+                print(green("\nEncrypted File Content:\n"))
+
+                print(encrypted)
+
+                save_to_file(encrypted)
+
+
+        elif choice == "12":
+
+            about()
+
+
         elif choice == "q":
-            print("\n  Bye! 👋\n")
+
+            print(green("\nBye 👋\n"))
+
             break
 
+
         else:
-            print("  Try 1, 2, 3, 4, or q.\n")
+
+            print(red("Invalid option.\n"))
+
+
+
 
 if __name__ == "__main__":
     main()
