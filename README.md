@@ -1,13 +1,15 @@
-# Caesar Cipher Tool
+# Cipher Toolkit
 
-A command-line Python script that implements the classic Caesar cipher. It's a straightforward, interactive tool for encrypting, decrypting, and exploring how to crack one of the oldest encryption techniques.
+A command-line Python script that implements the classic Caesar and Vigenère ciphers. It's a straightforward, interactive tool for encrypting, decrypting, and exploring how to crack historical encryption techniques.
 
 ## Features
 
-- **Encrypt:** Shift letters by a specific key to create ciphertext.
-- **Decrypt:** Reverse the shift to read hidden text if you know the key.
-- **Brute Force:** Try all 25 possible shifts. The script automatically flags outputs that contain common English words to help you identify the original message.
+- **Caesar Cipher (Encrypt/Decrypt):** Shift letters by a specific key to create ciphertext or reverse it to read hidden text.
+- **Vigenère Cipher (Encrypt/Decrypt):** Use a keyword to apply multiple Caesar ciphers, making it much harder to crack.
+- **Brute Force Attack:** Try all 25 possible Caesar shifts. The script automatically flags outputs that contain common English words.
+- **Frequency Analysis:** Analyze the letter frequency of a text and visualize it with a bar chart to help crack substitution ciphers.
 - **Strength Report:** Analyzes the length, shift value, and symbol usage of your message to provide a basic security rating.
+- **Additional Tools:** Random Key Encrypt, ROT13, Shift Comparison, and File Encryption capabilities.
 
 ## Usage
 
@@ -24,20 +26,29 @@ python cipher.py
 When you start the tool, you'll see an interactive menu:
 
 ```text
-  ╔════════════════════════════╗
-  ║    CAESAR CIPHER TOOL      ║
-  ╠════════════════════════════╣
-  ║  1 · 🔒 Encrypt            ║
-  ║  2 · 🔓 Decrypt            ║
-  ║  3 · 🔨 Brute Force        ║
-  ║  4 · 🛡️  Strength Report   ║
-  ║  q · Quit                  ║
-  ╚════════════════════════════╝
+╔══════════════════════════════════╗
+║        CIPHER TOOLKIT           ║
+╠══════════════════════════════════╣
+║ 1  · Encrypt Caesar             ║
+║ 2  · Decrypt Caesar             ║
+║ 3  · Brute Force Attack         ║
+║ 4  · Strength Report            ║
+║ 5  · Frequency Analysis         ║
+║ 6  · Random Key Encrypt         ║
+║ 7  · ROT13                      ║
+║ 8  · Compare All Shifts         ║
+║ 9  · Vigenere Encrypt           ║
+║ 10 · Vigenere Decrypt           ║
+║ 11 · Encrypt File               ║
+║ 12 · About Cipher               ║
+║ q  · Quit                       ║
+╚══════════════════════════════════╝
 ```
 
 Select an option by typing the corresponding number or letter.
 - When prompted for a shift value, enter a number between 1 and 25. Invalid inputs will default to a shift of 3.
 - The brute-force option outputs all possible combinations and marks readable English results with a `← readable?` tag.
+- The script optionally uses `colorama` for colored output if it is installed (run `pip install colorama` to enable).
 
 ## Security Note
 
